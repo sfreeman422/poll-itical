@@ -45,8 +45,7 @@ const generateOptions = (title, data) => {
       title: "%"
     },
     legend: {
-      cursor: "pointer",
-      itemclick: e => console.log(e)
+      cursor: "pointer"
     },
     toolTip: {
       shared: true
