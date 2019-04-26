@@ -10,11 +10,11 @@ const generateDataPoints = data => {
       if (choices[data[i].answers[j].choice]) {
         choices[data[i].answers[j].choice].push({
           x: new Date(data[i].endDate),
-          y: data[i].answers[j].pct
+          y: +data[i].answers[j].pct
         });
       } else {
         choices[data[i].answers[j].choice] = [
-          { x: new Date(data[i].endDate), y: data[i].answers[j].pct }
+          { x: new Date(data[i].endDate), y: +data[i].answers[j].pct }
         ];
       }
     }
@@ -25,6 +25,7 @@ const generateDataPoints = data => {
       name: key,
       type: "spline",
       showInLegend: true,
+      xValueFormatString: "MM/DD/YY",
       dataPoints: choices[key]
     });
   });
@@ -40,14 +41,8 @@ const generateOptions = (title, data) => {
     title: {
       text: title
     },
-    axisX: {
-      valueFormatString: "MM/DD/YY",
-      Title: "Date",
-      lineThickness: 1
-    },
     axisY: {
-      title: "Percentage",
-      lineThickness: 1
+      title: "%"
     },
     legend: {
       cursor: "pointer",
@@ -58,7 +53,6 @@ const generateOptions = (title, data) => {
     },
     data: generateDataPoints(data)
   };
-  console.log("options", options);
   return options;
 };
 
@@ -68,6 +62,7 @@ const ChartContainer = ({ data }) => {
     <div className="chartContainer">
       {Object.keys(data).map((key, i) => {
         const options = generateOptions(key, data[key]);
+        console.log("options right before graph", options);
         return <LineGraph key={`linegraph-key-${i}`} options={options} />;
       })}
     </div>
