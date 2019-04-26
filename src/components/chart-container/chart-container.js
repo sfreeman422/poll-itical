@@ -51,7 +51,6 @@ const generateOptions = (title, data) => {
       shared: true,
       contentFormatter: e => {
         const sorted = e.entries.sort((a, b) => b.dataPoint.y - a.dataPoint.y);
-        console.log(sorted);
         let string = "";
         for (let i = 0; i < sorted.length; i++) {
           string += `<span>${sorted[i].dataSeries.options.name}: ${
@@ -67,7 +66,6 @@ const generateOptions = (title, data) => {
 };
 
 const ChartContainer = ({ data }) => {
-  console.log("container data", data);
   return (
     <div className="chartContainer">
       {Object.keys(data).map((key, i) => {
