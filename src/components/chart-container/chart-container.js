@@ -53,6 +53,11 @@ const generateOptions = (title, data) => {
         const sorted = e.entries.sort((a, b) => b.dataPoint.y - a.dataPoint.y);
         let string = "";
         for (let i = 0; i < sorted.length; i++) {
+          if (i === 0) {
+            string += `<strong>${sorted[
+              i
+            ].dataPoint.x.toDateString()}</strong><br/>`;
+          }
           string += `<span>${sorted[i].dataSeries.options.name}: ${
             sorted[i].dataPoint.y
           }%</span><br/>`;
