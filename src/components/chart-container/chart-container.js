@@ -1,7 +1,8 @@
 import React from "react";
 import LineGraph from "../graphs/LineGraph";
+import USMap from "../maps/USMap";
 
-const generateDataPoints = data => {
+const generateDataPoints = (data) => {
   const dataPoints = [];
   const choices = {};
   // Generates a map of our choices and the datapoints associated with them.
@@ -10,23 +11,23 @@ const generateDataPoints = data => {
       if (choices[data[i].answers[j].choice]) {
         choices[data[i].answers[j].choice].push({
           x: new Date(data[i].endDate),
-          y: +data[i].answers[j].pct
+          y: +data[i].answers[j].pct,
         });
       } else {
         choices[data[i].answers[j].choice] = [
-          { x: new Date(data[i].endDate), y: +data[i].answers[j].pct }
+          { x: new Date(data[i].endDate), y: +data[i].answers[j].pct },
         ];
       }
     }
   }
 
-  Object.keys(choices).forEach(key => {
+  Object.keys(choices).forEach((key) => {
     dataPoints.push({
       name: key,
       type: "spline",
       showInLegend: true,
       xValueFormatString: "MM/DD/YY",
-      dataPoints: choices[key]
+      dataPoints: choices[key],
     });
   });
 
@@ -39,17 +40,17 @@ const generateOptions = (title, data) => {
     theme: "light1",
     zoomEnabled: true,
     title: {
-      text: title
+      text: title,
     },
     axisY: {
-      title: "%"
+      title: "%",
     },
     legend: {
-      cursor: "pointer"
+      cursor: "pointer",
     },
     toolTip: {
       shared: true,
-      contentFormatter: e => {
+      contentFormatter: (e) => {
         const sorted = e.entries.sort((a, b) => b.dataPoint.y - a.dataPoint.y);
         let string = "";
         for (let i = 0; i < sorted.length; i++) {
@@ -58,25 +59,42 @@ const generateOptions = (title, data) => {
               i
             ].dataPoint.x.toDateString()}</strong><br/>`;
           }
-          string += `<span>${sorted[i].dataSeries.options.name}: ${
-            sorted[i].dataPoint.y
-          }%</span><br/>`;
+          string += `<span>${sorted[i].dataSeries.options.name}: ${sorted[i].dataPoint.y}%</span><br/>`;
         }
         return string;
-      }
+      },
     },
-    data: generateDataPoints(data)
+    data: generateDataPoints(data),
   };
   return options;
+};
+
+const generateGenByState = (data) => {
+  const mapObj = {};
+  if (data) {
+    for (let i = 0; i < data.length; i++) {
+      if (mapObj[data[i].state]) {
+        mapObj[data[i].state].push(data[i]);
+      } else if (data[i].state !== "National") {
+        mapObj[data[i].state] = [data[i]];
+      }
+    }
+  }
+  return mapObj;
 };
 
 const ChartContainer = ({ data }) => {
   return (
     <div className="chartContainer">
-      {Object.keys(data).map((key, i) => {
-        const options = generateOptions(key, data[key]);
-        return <LineGraph key={`linegraph-key-${i}`} options={options} />;
-      })}
+      <div className="map">
+        <USMap data={generateGenByState(data["president-general"])} />
+      </div>
+      <div className="graphs">
+        {Object.keys(data).map((key, i) => {
+          const options = generateOptions(key, data[key]);
+          return <LineGraph key={`linegraph-key-${i}`} options={options} />;
+        })}
+      </div>
     </div>
   );
 };
