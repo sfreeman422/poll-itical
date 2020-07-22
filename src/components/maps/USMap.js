@@ -25,28 +25,83 @@ const offsets = {
   DC: [49, 21],
 };
 
+const getColorShade = (winner, loser, candidate) => {
+  const defaultColor = "#DDD";
+  const blueColor = {
+    20: "#003f9a",
+    15: "#005ce1",
+    10: "#2a81ff",
+    5: "#71abff",
+    0: "#b8d5ff",
+  };
+
+  const redColor = {
+    20: "#a20004",
+    15: "#e70005",
+    10: "#ff2e33",
+    5: "#ff7477",
+    0: "#ffb9bb",
+  };
+
+  const difference = winner - loser;
+
+  if (candidate === "trump") {
+    if (difference >= 20) {
+      return redColor[20];
+    } else if (difference >= 15 && difference < 20) {
+      return redColor[15];
+    } else if (difference >= 10 && difference < 15) {
+      return redColor[10];
+    } else if (difference >= 5 && difference < 10) {
+      return redColor[5];
+    } else if (difference >= 0 && difference < 5) {
+      return redColor[0];
+    }
+  } else if (candidate === "biden") {
+    if (difference >= 20) {
+      return blueColor[20];
+    } else if (difference >= 15 && difference < 20) {
+      return blueColor[15];
+    } else if (difference >= 10 && difference < 15) {
+      return blueColor[10];
+    } else if (difference >= 5 && difference < 10) {
+      return blueColor[5];
+    } else if (difference >= 0 && difference < 5) {
+      return blueColor[0];
+    }
+  } else {
+    return defaultColor;
+  }
+};
+
 const getColor = (state, data) => {
-  let color = "#DDD";
+  let winnerScore = 0;
+  let loserScore = 0;
+  let winner = "";
   if (data[state]) {
     const latestResult = data[state][data[state].length - 1].answers;
-    let winnerScore = 0;
     for (let i = 0; i < latestResult.length; i++) {
-      if (
-        latestResult[i].choice.toLowerCase() === "biden" &&
-        +latestResult[i].pct > winnerScore
-      ) {
-        winnerScore = +latestResult[i].pct;
-        color = "blue";
-      } else if (
-        latestResult[i].choice.toLowerCase() === "trump" &&
-        +latestResult[i].pct > winnerScore
-      ) {
-        winnerScore = +latestResult[i].pct;
-        color = "red";
+      if (latestResult[i].choice.toLowerCase() === "biden") {
+        if (+latestResult[i].pct > winnerScore) {
+          loserScore = winnerScore;
+          winnerScore = +latestResult[i].pct;
+          winner = "biden";
+        } else if (+latestResult[i].pct < winnerScore) {
+          loserScore = +latestResult[i].pct;
+        }
+      } else if (latestResult[i].choice.toLowerCase() === "trump") {
+        if (+latestResult[i].pct > winnerScore) {
+          loserScore = winnerScore;
+          winnerScore = +latestResult[i].pct;
+          winner = "trump";
+        } else if (+latestResult[i].pct < winnerScore) {
+          loserScore = +latestResult[i].pct;
+        }
       }
     }
   }
-  return color;
+
+  return getColorShade(winnerScore, loserScore, winner);
 };
 
 const getElectoralVotes = (data, candidate) => {
@@ -92,6 +147,28 @@ const USMap = (props) => {
       <h2>Electoral Votes</h2>
       <h3>Trump: {trumpVotes}</h3>
       <h3>Biden: {bidenVotes}</h3>
+      <div>
+        <div>
+          <div className="colorBox red20"></div> 20% or more lead{" "}
+          <div className="colorBox blue20"></div>
+        </div>
+        <div>
+          <div className="colorBox red15"></div> 15%-20% lead{" "}
+          <div className="colorBox blue15"></div>
+        </div>
+        <div>
+          <div className="colorBox red10"></div> 10%-15% lead{" "}
+          <div className="colorBox blue10"></div>
+        </div>
+        <div>
+          <div className="colorBox red05"></div> 5%-10% lead{" "}
+          <div className="colorBox blue05"></div>
+        </div>
+        <div>
+          <div className="colorBox red00"></div> 0%-5% lead{" "}
+          <div className="colorBox blue00"></div>
+        </div>
+      </div>
       <ComposableMap projection="geoAlbersUsa">
         <Geographies geography={geoUrl}>
           {({ geographies }) => (

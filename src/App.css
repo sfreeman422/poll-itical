@@ -17,6 +17,52 @@
   color: #61dafb;
 }
 
+.colorBox {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.red20 {
+  background-color: #a20004;
+}
+
+.red15 {
+  background-color: #e70005;
+}
+
+.red10 {
+  background-color: #ff2e33;
+}
+
+.red05 {
+  background-color: #ff7477;
+}
+
+.red00 {
+  background-color: #ffb9bb;
+}
+
+.blue20 {
+  background-color: #003f9a;
+}
+
+.blue15 {
+  background-color: #005ce1;
+}
+
+.blue10 {
+  background-color: #2a81ff;
+}
+
+.blue05 {
+  background-color: #71abff;
+}
+
+.blue00 {
+  background-color: #b8d5ff;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
