@@ -12,7 +12,7 @@ import { electoralVotes } from "./data/electoralvotes";
 import allStates from "./data/allstates.json";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
-
+const defaultColor = "#DDD";
 const offsets = {
   VT: [50, -8],
   NH: [34, 2],
@@ -26,7 +26,6 @@ const offsets = {
 };
 
 const getColorShade = (winner, loser, candidate) => {
-  const defaultColor = "#DDD";
   const blueColor = {
     20: "#003f9a",
     15: "#005ce1",
@@ -54,8 +53,10 @@ const getColorShade = (winner, loser, candidate) => {
       return redColor[10];
     } else if (difference >= 5 && difference < 10) {
       return redColor[5];
-    } else if (difference >= 0 && difference < 5) {
+    } else if (difference > 0 && difference < 5) {
       return redColor[0];
+    } else if (difference === 0) {
+      return defaultColor;
     }
   } else if (candidate === "biden") {
     if (difference >= 20) {
@@ -66,80 +67,93 @@ const getColorShade = (winner, loser, candidate) => {
       return blueColor[10];
     } else if (difference >= 5 && difference < 10) {
       return blueColor[5];
-    } else if (difference >= 0 && difference < 5) {
+    } else if (difference > 0 && difference < 5) {
       return blueColor[0];
+    } else if (difference === 0) {
+      return defaultColor;
     }
   } else {
     return defaultColor;
   }
 };
 
-const getColor = (state, data) => {
-  let winnerScore = 0;
-  let loserScore = 0;
-  let winner = "";
-  if (data[state]) {
-    const latestResult = data[state][data[state].length - 1].answers;
-    for (let i = 0; i < latestResult.length; i++) {
-      if (latestResult[i].choice.toLowerCase() === "biden") {
-        if (+latestResult[i].pct > winnerScore) {
-          loserScore = winnerScore;
-          winnerScore = +latestResult[i].pct;
-          winner = "biden";
-        } else if (+latestResult[i].pct < winnerScore) {
-          loserScore = +latestResult[i].pct;
-        }
-      } else if (latestResult[i].choice.toLowerCase() === "trump") {
-        if (+latestResult[i].pct > winnerScore) {
-          loserScore = winnerScore;
-          winnerScore = +latestResult[i].pct;
-          winner = "trump";
-        } else if (+latestResult[i].pct < winnerScore) {
-          loserScore = +latestResult[i].pct;
-        }
-      }
-    }
-  }
-
-  return getColorShade(winnerScore, loserScore, winner);
+const getLatestGoodPoll = (arr) => {
+  const goodPolls = arr.filter(
+    (poll) =>
+      poll.grade.includes("A") ||
+      poll.grade.includes("B") ||
+      (poll.grade.includes("C") && !poll.grade.includes("D"))
+  );
+  console.log(goodPolls);
+  return goodPolls.length > 1 ? goodPolls[goodPolls.length - 1] : undefined;
 };
 
-const getElectoralVotes = (data, candidate) => {
-  let votes = 0;
-  let winner;
+const generateResults = (data) => {
+  const results = {};
   Object.keys(electoralVotes).forEach((key) => {
     if (data[key]) {
       const votesAvailable = electoralVotes[key];
-      const latestResult = data[key][data[key].length - 1].answers;
-      let winnerScore = 0;
-      for (let i = 0; i < latestResult.length; i++) {
-        if (
-          latestResult[i].choice.toLowerCase() === "biden" &&
-          +latestResult[i].pct > winnerScore
-        ) {
-          winnerScore = +latestResult[i].pct;
-          winner = "biden";
-        } else if (
-          latestResult[i].choice.toLowerCase() === "trump" &&
-          +latestResult[i].pct > winnerScore
-        ) {
-          winnerScore = +latestResult[i].pct;
-          winner = "trump";
+      const latestGoodPoll = getLatestGoodPoll(data[key]);
+      const latestResult = latestGoodPoll ? latestGoodPoll.answers : undefined;
+      if (latestResult) {
+        let winnerScore = 0;
+        let loserScore = 0;
+        let winner;
+        for (let i = 0; i < latestResult.length; i++) {
+          const pct = +latestResult[i].pct;
+          if (pct > winnerScore) {
+            loserScore = winnerScore;
+            winnerScore = +latestResult[i].pct;
+            winner = latestResult[i].choice.toLowerCase();
+          } else if (pct < winnerScore) {
+            loserScore = pct;
+          } else if (pct === winnerScore) {
+            loserScore = winnerScore;
+          }
         }
-      }
-      if (winner === candidate) {
-        votes += votesAvailable;
+        results[key] = {
+          winner,
+          winnerScore,
+          loserScore,
+          difference: winnerScore - loserScore,
+          votes: votesAvailable,
+          color: getColorShade(winnerScore, loserScore, winner),
+          poll: latestGoodPoll,
+        };
       }
     }
+
+    const votes = {
+      biden: 0,
+      trump: 0,
+      total: 0,
+    };
+
+    Object.keys(results).forEach((key) => {
+      if (results[key].winner === "biden") {
+        votes.biden += results[key].votes;
+      } else if (results[key].winner === "trump") {
+        votes.trump += results[key].votes;
+      }
+      if (results[key].votes) {
+        votes.total += results[key].votes;
+      }
+    });
+
+    results.total = {
+      biden: votes.biden,
+      trump: votes.trump,
+      total: votes.total,
+    };
   });
-  return votes;
+  console.log(results);
+  return results;
 };
 
 const USMap = (props) => {
-  let trumpVotes = 0;
-  let bidenVotes = 0;
-  trumpVotes += getElectoralVotes(props.data, "trump");
-  bidenVotes += getElectoralVotes(props.data, "biden");
+  const results = generateResults(props.data);
+  const bidenVotes = results.total.biden;
+  const trumpVotes = results.total.trump;
 
   return (
     <div>
@@ -165,7 +179,7 @@ const USMap = (props) => {
           <div className="colorBox blue05"></div>
         </div>
         <div>
-          <div className="colorBox red00"></div> 0%-5% lead{" "}
+          <div className="colorBox red00"></div> 1%-5% lead{" "}
           <div className="colorBox blue00"></div>
         </div>
       </div>
@@ -174,7 +188,9 @@ const USMap = (props) => {
           {({ geographies }) => (
             <>
               {geographies.map((geo) => {
-                const color = getColor(geo.properties.name, props.data);
+                const color = results[geo.properties.name]
+                  ? results[geo.properties.name].color
+                  : defaultColor;
                 return (
                   <Geography
                     key={geo.rsmKey}
