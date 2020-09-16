@@ -7,6 +7,7 @@ import {
   Marker,
   Annotation,
 } from "react-simple-maps";
+import { DateTime } from "luxon";
 
 import { electoralVotes } from "./data/electoralvotes";
 import allStates from "./data/allstates.json";
@@ -78,13 +79,16 @@ const getColorShade = (winner, loser, candidate) => {
 };
 
 const getLatestGoodPoll = (arr) => {
-  const goodPolls = arr.filter(
-    (poll) =>
-      poll.grade.includes("A") ||
-      poll.grade.includes("B") ||
-      (poll.grade.includes("C") && !poll.grade.includes("D"))
-  );
-  console.log(goodPolls);
+  const goodPolls = arr.filter((poll) => {
+    const isRecent =
+      DateTime.fromISO(poll.endDate).diffNow("days").toObject().days > -90;
+    return (
+      (poll.grade.includes("A") ||
+        poll.grade.includes("B") ||
+        (poll.grade.includes("C") && !poll.grade.includes("D"))) &&
+      isRecent
+    );
+  });
   return goodPolls.length > 1 ? goodPolls[goodPolls.length - 1] : undefined;
 };
 
@@ -146,7 +150,6 @@ const generateResults = (data) => {
       total: votes.total,
     };
   });
-  console.log(results);
   return results;
 };
 
