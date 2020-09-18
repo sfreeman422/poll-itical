@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { geoCentroid } from "d3-geo";
 import {
   ComposableMap,
@@ -188,9 +188,11 @@ const generateResults = (data, filterData) => {
 };
 
 const USMap = (props) => {
+  const [age, setAge] = useState("90");
+  const [rating, setRating] = useState("C");
   const results = generateResults(props.data, {
-    rating: props.rating,
-    age: props.age,
+    rating,
+    age,
   });
   const bidenVotes = results.total.biden;
   const trumpVotes = results.total.trump;
@@ -223,55 +225,79 @@ const USMap = (props) => {
           <div className="colorBox blue00"></div>
         </div>
       </div>
-      <ComposableMap projection="geoAlbersUsa">
-        <Geographies geography={geoUrl}>
-          {({ geographies }) => (
-            <>
-              {geographies.map((geo) => {
-                const color = results[geo.properties.name]
-                  ? results[geo.properties.name].color
-                  : defaultColor;
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    stroke="#FFF"
-                    geography={geo}
-                    fill={color}
-                  />
-                );
-              })}
-              {geographies.map((geo) => {
-                const centroid = geoCentroid(geo);
-                const cur = allStates.find((s) => s.val === geo.id);
-                return (
-                  <g key={geo.rsmKey + "-name"}>
-                    {cur &&
-                      centroid[0] > -160 &&
-                      centroid[0] < -67 &&
-                      (Object.keys(offsets).indexOf(cur.id) === -1 ? (
-                        <Marker coordinates={centroid}>
-                          <text y="2" fontSize={14} textAnchor="middle">
-                            {cur.id}
-                          </text>
-                        </Marker>
-                      ) : (
-                        <Annotation
-                          subject={centroid}
-                          dx={offsets[cur.id][0]}
-                          dy={offsets[cur.id][1]}
-                        >
-                          <text x={4} fontSize={14} alignmentBaseline="middle">
-                            {cur.id}
-                          </text>
-                        </Annotation>
-                      ))}
-                  </g>
-                );
-              })}
-            </>
-          )}
-        </Geographies>
-      </ComposableMap>
+      <div>
+        Time Period:{" "}
+        <select onChange={(e) => setAge(e.target.value)} value={age}>
+          <option value="30">30 Days</option>
+          <option value="60">60 Days</option>
+          <option value="90">90 Days</option>
+          <option value="120">120 Days</option>
+          <option value="all">All Available Data</option>
+        </select>
+        <br />
+        Minimum Poll Rating
+        <select onChange={(e) => setRating(e.target.value)} value={rating}>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+      </div>
+      <div className="map-container">
+        <ComposableMap projection="geoAlbersUsa">
+          <Geographies geography={geoUrl}>
+            {({ geographies }) => (
+              <>
+                {geographies.map((geo) => {
+                  const color = results[geo.properties.name]
+                    ? results[geo.properties.name].color
+                    : defaultColor;
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      stroke="#FFF"
+                      geography={geo}
+                      fill={color}
+                    />
+                  );
+                })}
+                {geographies.map((geo) => {
+                  const centroid = geoCentroid(geo);
+                  const cur = allStates.find((s) => s.val === geo.id);
+                  return (
+                    <g key={geo.rsmKey + "-name"}>
+                      {cur &&
+                        centroid[0] > -160 &&
+                        centroid[0] < -67 &&
+                        (Object.keys(offsets).indexOf(cur.id) === -1 ? (
+                          <Marker coordinates={centroid}>
+                            <text y="2" fontSize={14} textAnchor="middle">
+                              {cur.id}
+                            </text>
+                          </Marker>
+                        ) : (
+                          <Annotation
+                            subject={centroid}
+                            dx={offsets[cur.id][0]}
+                            dy={offsets[cur.id][1]}
+                          >
+                            <text
+                              x={4}
+                              fontSize={14}
+                              alignmentBaseline="middle"
+                            >
+                              {cur.id}
+                            </text>
+                          </Annotation>
+                        ))}
+                    </g>
+                  );
+                })}
+              </>
+            )}
+          </Geographies>
+        </ComposableMap>
+      </div>
     </div>
   );
 };

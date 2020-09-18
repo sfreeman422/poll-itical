@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import LineGraph from "../graphs/LineGraph";
 import USMap from "../maps/USMap";
 
@@ -84,34 +84,10 @@ const generateGenByState = (data) => {
 };
 
 const ChartContainer = ({ data }) => {
-  const [age, setAge] = useState("90");
-  const [rating, setRating] = useState("C");
   return (
     <div className="chartContainer">
       <div className="map">
-        <div>
-          Time Period:{" "}
-          <select onChange={(e) => setAge(e.target.value)} value={age}>
-            <option value="30">30 Days</option>
-            <option value="60">60 Days</option>
-            <option value="90">90 Days</option>
-            <option value="120">120 Days</option>
-            <option value="all">All Available Data</option>
-          </select>
-          <br />
-          Minimum Poll Rating
-          <select onChange={(e) => setRating(e.target.value)} value={rating}>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
-          </select>
-        </div>
-        <USMap
-          data={generateGenByState(data["president-general"])}
-          rating={rating}
-          age={age}
-        />
+        <USMap data={generateGenByState(data["president-general"])} />
       </div>
       <div className="graphs">
         {Object.keys(data).map((key, i) => {
