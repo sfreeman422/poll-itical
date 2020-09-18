@@ -78,26 +78,60 @@ const getColorShade = (winner, loser, candidate) => {
   }
 };
 
-const getLatestGoodPoll = (arr) => {
+const checkForRating = (desired, actual) => {
+  const ratingThresholds = {
+    A: { good: ["A"], bad: ["B", "C", "D"] },
+    B: { good: ["A", "B"], bad: ["C", "D"] },
+    C: { good: ["A", "B", "C"], bad: ["D"] },
+    D: { good: ["A", "B", "C", "D"], bad: [] },
+  };
+
+  const split = actual.split("");
+  let hasGoodRating = false;
+  let hasBadRating = false;
+  for (const goodRating of ratingThresholds[desired].good) {
+    if (hasGoodRating) {
+      break;
+    } else {
+      hasGoodRating = split.includes(goodRating);
+    }
+  }
+
+  for (const badRating of ratingThresholds[desired].bad) {
+    if (hasBadRating) {
+      break;
+    } else {
+      hasBadRating = split.includes(badRating);
+    }
+  }
+
+  return hasGoodRating && !hasBadRating;
+};
+
+const getLatestGoodPoll = (arr, age, rating) => {
+  const ageAsNum = +age;
   const goodPolls = arr.filter((poll) => {
     const isRecent =
-      DateTime.fromISO(poll.endDate).diffNow("days").toObject().days > -90;
-    return (
-      (poll.grade.includes("A") ||
-        poll.grade.includes("B") ||
-        (poll.grade.includes("C") && !poll.grade.includes("D"))) &&
-      isRecent
-    );
+      age === "all"
+        ? true
+        : DateTime.fromISO(poll.endDate).diffNow("days").toObject().days >
+          -ageAsNum;
+    const passing = checkForRating(rating, poll.grade);
+    return passing && isRecent;
   });
   return goodPolls.length > 1 ? goodPolls[goodPolls.length - 1] : undefined;
 };
 
-const generateResults = (data) => {
+const generateResults = (data, filterData) => {
   const results = {};
   Object.keys(electoralVotes).forEach((key) => {
     if (data[key]) {
       const votesAvailable = electoralVotes[key];
-      const latestGoodPoll = getLatestGoodPoll(data[key]);
+      const latestGoodPoll = getLatestGoodPoll(
+        data[key],
+        filterData.age,
+        filterData.rating
+      );
       const latestResult = latestGoodPoll ? latestGoodPoll.answers : undefined;
       if (latestResult) {
         let winnerScore = 0;
@@ -154,7 +188,10 @@ const generateResults = (data) => {
 };
 
 const USMap = (props) => {
-  const results = generateResults(props.data);
+  const results = generateResults(props.data, {
+    rating: props.rating,
+    age: props.age,
+  });
   const bidenVotes = results.total.biden;
   const trumpVotes = results.total.trump;
 
