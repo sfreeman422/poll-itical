@@ -108,7 +108,37 @@ const checkForRating = (desired, actual) => {
   return hasGoodRating && !hasBadRating;
 };
 
-const getLatestGoodPoll = (arr, age, rating) => {
+const getAverage = (arr) => {
+  let totalJoe = 0;
+  let quantityJoe = 0;
+  let totalTrump = 0;
+  let quantityTrump = 0;
+  for (const poll of arr) {
+    for (const answer of poll.answers) {
+      if (answer.choice.toLowerCase() === "biden") {
+        totalJoe += +answer.pct;
+        quantityJoe += 1;
+      } else if (answer.choice.toLowerCase() === "trump") {
+        totalTrump += +answer.pct;
+        quantityTrump += 1;
+      }
+    }
+  }
+  return {
+    answers: [
+      {
+        choice: "biden",
+        pct: totalJoe / quantityJoe,
+      },
+      {
+        choice: "trump",
+        pct: totalTrump / quantityTrump,
+      },
+    ],
+  };
+};
+
+const getLatestGoodPoll = (arr, age, rating, calcType) => {
   const ageAsNum = +age;
   const goodPolls = arr.filter((poll) => {
     const isRecent =
@@ -119,10 +149,16 @@ const getLatestGoodPoll = (arr, age, rating) => {
     const passing = checkForRating(rating, poll.grade);
     return passing && isRecent;
   });
-  return goodPolls.length > 1 ? goodPolls[goodPolls.length - 1] : undefined;
+  if (goodPolls.length > 1) {
+    if (calcType === "average") {
+      return getAverage(goodPolls);
+    }
+    return goodPolls[goodPolls.length - 1];
+  }
+  return undefined;
 };
 
-const generateResults = (data, filterData) => {
+const generateResults = (data, filterData, calcType) => {
   const results = {};
   Object.keys(electoralVotes).forEach((key) => {
     if (data[key]) {
@@ -130,7 +166,8 @@ const generateResults = (data, filterData) => {
       const latestGoodPoll = getLatestGoodPoll(
         data[key],
         filterData.age,
-        filterData.rating
+        filterData.rating,
+        calcType
       );
       const latestResult = latestGoodPoll ? latestGoodPoll.answers : undefined;
       if (latestResult) {
@@ -190,10 +227,15 @@ const generateResults = (data, filterData) => {
 const USMap = (props) => {
   const [age, setAge] = useState("90");
   const [rating, setRating] = useState("C");
-  const results = generateResults(props.data, {
-    rating,
-    age,
-  });
+  const [calcType, setCalcType] = useState("latest");
+  const results = generateResults(
+    props.data,
+    {
+      rating,
+      age,
+    },
+    calcType
+  );
   const bidenVotes = results.total.biden;
   const trumpVotes = results.total.trump;
 
@@ -235,12 +277,17 @@ const USMap = (props) => {
           <option value="all">All Available Data</option>
         </select>
         <br />
-        Minimum Poll Rating
+        Minimum Poll Rating:{" "}
         <select onChange={(e) => setRating(e.target.value)} value={rating}>
           <option value="A">A</option>
           <option value="B">B</option>
           <option value="C">C</option>
           <option value="D">D</option>
+        </select>
+        Calculation Type:{" "}
+        <select onChange={(e) => setCalcType(e.target.value)} value={calcType}>
+          <option value="average">Average</option>
+          <option value="latest">Latest</option>
         </select>
       </div>
       <div className="map-container">
