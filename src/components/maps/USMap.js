@@ -175,15 +175,20 @@ const generateResults = (data, filterData, calcType) => {
         let loserScore = 0;
         let winner;
         for (let i = 0; i < latestResult.length; i++) {
-          const pct = +latestResult[i].pct;
-          if (pct > winnerScore) {
-            loserScore = winnerScore;
-            winnerScore = +latestResult[i].pct;
-            winner = latestResult[i].choice.toLowerCase();
-          } else if (pct < winnerScore) {
-            loserScore = pct;
-          } else if (pct === winnerScore) {
-            loserScore = winnerScore;
+          if (
+            latestResult[i].choice.toLowerCase() === "trump" ||
+            latestResult[i].choice.toLowerCase() === "biden"
+          ) {
+            const pct = +latestResult[i].pct;
+            if (pct > winnerScore) {
+              loserScore = winnerScore;
+              winnerScore = +latestResult[i].pct;
+              winner = latestResult[i].choice.toLowerCase();
+            } else if (pct < winnerScore) {
+              loserScore = pct;
+            } else if (pct === winnerScore) {
+              loserScore = winnerScore;
+            }
           }
         }
         results[key] = {
@@ -221,6 +226,7 @@ const generateResults = (data, filterData, calcType) => {
       total: votes.total,
     };
   });
+  console.log(results);
   return results;
 };
 
@@ -284,6 +290,7 @@ const USMap = (props) => {
           <option value="C">C</option>
           <option value="D">D</option>
         </select>
+        <br />
         Calculation Type:{" "}
         <select onChange={(e) => setCalcType(e.target.value)} value={calcType}>
           <option value="average">Average</option>
