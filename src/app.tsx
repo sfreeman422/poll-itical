@@ -1,7 +1,7 @@
 import React from "react";
 import ChartContainer from "./components/chart-container/chart-container";
 import filterAndSort from "./helpers/filterAndSort";
-import "./App.css";
+import "./app.css";
 import { PollResponse } from "./models/poll-response";
 import { MapObject } from "./models/map-object";
 
@@ -21,7 +21,9 @@ export const App = () => {
         <h1>Pollitical</h1>
         <p>Polling Info from FiveThirtyEight Over Time</p>
       </header>
-      <ChartContainer data={data} />
+      <div className="content">
+        <ChartContainer data={data} />
+      </div>
     </div>
   );
 };

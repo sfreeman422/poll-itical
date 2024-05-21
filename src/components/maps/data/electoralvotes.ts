@@ -1,4 +1,4 @@
-export const electoralVotes = {
+export const electoralVotes: Record<string, number> = {
   Alabama: 9,
   Alaska: 3,
   Arizona: 11,

@@ -1,11 +1,14 @@
-import LineGraph from "../graphs/LineGraph";
+import { LineGraph } from "../graphs/LineGraph";
 import USMap from "../maps/USMap";
 import { MapObject } from "../../models/map-object";
 import { PollResponse } from "../../models/poll-response";
+import { ChartChoices, ChartDataPoints } from "./data-points.model";
+import { PollResponsesByState } from "./poll-response-by-state.model";
+import "./chart-container.css";
 
-const generateDataPoints = (data: PollResponse[]) => {
-  const dataPoints = [];
-  const choices = {};
+const generateDataPoints = (data: PollResponse[]): ChartDataPoints[] => {
+  const dataPoints: ChartDataPoints[] = [];
+  const choices: ChartChoices = {};
   // Generates a map of our choices and the datapoints associated with them.
   for (let i = 0; i < data.length; i++) {
     for (let j = 0; j < data[i].answers.length; j++) {
@@ -72,17 +75,23 @@ const generateOptions = (title: string, data: PollResponse[]) => {
   return options;
 };
 
-const generateGenByState = (data) => {
-  const mapObj = {};
+const generatePollResponsesByState = (
+  data: PollResponse[]
+): PollResponsesByState => {
+  const mapObj: PollResponsesByState = {};
+
   if (data) {
     for (let i = 0; i < data.length; i++) {
-      if (mapObj[data[i].state]) {
-        mapObj[data[i].state].push(data[i]);
-      } else if (data[i].state !== "National") {
-        mapObj[data[i].state] = [data[i]];
+      if (!!data[i].state && data[i].state !== "National") {
+        if (mapObj[data[i].state as string]) {
+          mapObj[data[i].state as string].push(data[i]);
+        } else {
+          mapObj[data[i].state as string] = [data[i]];
+        }
       }
     }
   }
+
   return mapObj;
 };
 
@@ -92,9 +101,9 @@ export interface ChartContainerProps {
 
 const ChartContainer = ({ data }: ChartContainerProps) => {
   return (
-    <div className="chartContainer">
+    <div className="chart-container">
       <div className="map">
-        <USMap data={generateGenByState(data["president-general"])} />
+        <USMap data={generatePollResponsesByState(data["president-general"])} />
       </div>
       <div className="graphs">
         {Object.keys(data).map((key, i) => (

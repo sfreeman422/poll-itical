@@ -3,32 +3,56 @@ import CanvasJSReact from "../../assets/canvasjs.react";
 
 const { CanvasJSChart } = CanvasJSReact;
 
-class LineGraph extends React.Component {
-  constructor(props) {
-    super(props);
-    this.chart = undefined;
-  }
-
-  toggleDataSeries = e => {
+export const LineGraph = ({ options }: any) => {
+  let chart; // Do we need this?
+  const toggleDataSeries = (e: any) => {
     if (typeof e.dataSeries.visible === "undefined" || e.dataSeries.visible) {
       e.dataSeries.visible = false;
     } else {
       e.dataSeries.visible = true;
     }
-    this.chart.render();
+    e.chart.render();
   };
 
-  render() {
-    this.props.options.legend.itemclick = e => this.toggleDataSeries(e);
-    return (
-      <div className="lineChart">
-        <CanvasJSChart
-          options={this.props.options}
-          onRef={ref => (this.chart = ref)}
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="lineChart">
+      <CanvasJSChart
+        options={{
+          ...options,
+          legend: { itemClick: toggleDataSeries },
+        }}
+        onRef={(ref: any) => (chart = ref)}
+      />
+    </div>
+  );
+};
 
-export default LineGraph;
+// class LineGraph extends React.Component {
+//   constructor(props) {
+//     super(props);
+//     this.chart = undefined;
+//   }
+
+//   toggleDataSeries = (e) => {
+//     if (typeof e.dataSeries.visible === "undefined" || e.dataSeries.visible) {
+//       e.dataSeries.visible = false;
+//     } else {
+//       e.dataSeries.visible = true;
+//     }
+//     this.chart.render();
+//   };
+
+//   render() {
+//     this.props.options.legend.itemclick = (e) => this.toggleDataSeries(e);
+//     return (
+//       <div className="lineChart">
+//         <CanvasJSChart
+//           options={this.props.options}
+//           onRef={(ref) => (this.chart = ref)}
+//         />
+//       </div>
+//     );
+//   }
+// }
+
+// export default LineGraph;

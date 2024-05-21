@@ -11,10 +11,17 @@ import { DateTime } from "luxon";
 
 import { electoralVotes } from "./data/electoralvotes";
 import allStates from "./data/allstates.json";
+import { PollResponsesByState } from "../chart-container/poll-response-by-state.model";
+import {
+  AllGeneratedResults,
+  GeneratedResults,
+  GeneratedResultsTotal,
+} from "./USMap.models";
+import { PollResponse } from "../../models/poll-response";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 const defaultColor = "#DDD";
-const offsets = {
+const offsets: Record<string, number[]> = {
   VT: [50, -8],
   NH: [34, 2],
   MA: [30, -1],
@@ -26,7 +33,7 @@ const offsets = {
   DC: [49, 21],
 };
 
-const getColorShade = (winner, loser, candidate) => {
+const getColorShade = (winner: number, loser: number, candidate: any) => {
   const blueColor = {
     20: "#003f9a",
     15: "#005ce1",
@@ -78,37 +85,7 @@ const getColorShade = (winner, loser, candidate) => {
   }
 };
 
-const checkForRating = (desired, actual) => {
-  const ratingThresholds = {
-    A: { good: ["A"], bad: ["B", "C", "D"] },
-    B: { good: ["A", "B"], bad: ["C", "D"] },
-    C: { good: ["A", "B", "C"], bad: ["D"] },
-    D: { good: ["A", "B", "C", "D"], bad: [] },
-  };
-
-  const split = actual.split("");
-  let hasGoodRating = false;
-  let hasBadRating = false;
-  for (const goodRating of ratingThresholds[desired].good) {
-    if (hasGoodRating) {
-      break;
-    } else {
-      hasGoodRating = split.includes(goodRating);
-    }
-  }
-
-  for (const badRating of ratingThresholds[desired].bad) {
-    if (hasBadRating) {
-      break;
-    } else {
-      hasBadRating = split.includes(badRating);
-    }
-  }
-
-  return hasGoodRating && !hasBadRating;
-};
-
-const getAverage = (arr) => {
+const getAverage = (arr: PollResponse[]) => {
   let totalJoe = 0;
   let quantityJoe = 0;
   let totalTrump = 0;
@@ -138,37 +115,49 @@ const getAverage = (arr) => {
   };
 };
 
-const getLatestGoodPoll = (arr, age, rating, calcType) => {
+const getLatestGoodPoll = (
+  arr: PollResponse[],
+  age: string,
+  calcType: string
+): any | undefined => {
   const ageAsNum = +age;
   const goodPolls = arr.filter((poll) => {
-    const isRecent =
-      age === "all"
-        ? true
-        : DateTime.fromISO(poll.endDate).diffNow("days").toObject().days >
-          -ageAsNum;
-    const passing = checkForRating(rating, poll.grade);
-    return passing && isRecent;
+    if (age === "all") {
+      return true;
+    } else if (poll.endDate) {
+      const diffDays =
+        DateTime.fromISO(poll.endDate).diffNow("days").toObject()?.days ||
+        -ageAsNum;
+
+      return diffDays > -ageAsNum;
+    }
+    return false;
   });
-  if (goodPolls.length > 1) {
+
+  if (goodPolls.length > 0) {
     if (calcType === "average") {
       return getAverage(goodPolls);
     }
-    return goodPolls[goodPolls.length - 1];
+    return goodPolls.sort((a, b) => a.endDate.localeCompare(b.endDate))[0];
   }
   return undefined;
 };
 
-const generateResults = (data, filterData, calcType) => {
-  const results = {};
+const generateResults = (
+  data: PollResponsesByState,
+  filter: ResultFilter,
+  calcType: string
+): AllGeneratedResults => {
+  const results: GeneratedResults = {};
+  const totalResults: GeneratedResultsTotal = {
+    biden: 0,
+    trump: 0,
+    total: 0,
+  };
   Object.keys(electoralVotes).forEach((key) => {
     if (data[key]) {
       const votesAvailable = electoralVotes[key];
-      const latestGoodPoll = getLatestGoodPoll(
-        data[key],
-        filterData.age,
-        filterData.rating,
-        calcType
-      );
+      const latestGoodPoll = getLatestGoodPoll(data[key], filter.age, calcType);
       const latestResult = latestGoodPoll ? latestGoodPoll.answers : undefined;
       if (latestResult) {
         let winnerScore = 0;
@@ -220,30 +209,37 @@ const generateResults = (data, filterData, calcType) => {
       }
     });
 
-    results.total = {
-      biden: votes.biden,
-      trump: votes.trump,
-      total: votes.total,
-    };
+    totalResults.biden = votes.biden;
+    totalResults.trump = votes.trump;
+    totalResults.total = votes.total;
   });
   console.log(results);
-  return results;
+  return { results: results, total: totalResults };
 };
 
-const USMap = (props) => {
+interface USMapProps {
+  data: PollResponsesByState;
+}
+
+interface ResultFilter {
+  rating: string;
+  age: string;
+}
+
+const USMap = ({ data }: USMapProps) => {
   const [age, setAge] = useState("90");
   const [rating, setRating] = useState("C");
   const [calcType, setCalcType] = useState("latest");
-  const results = generateResults(
-    props.data,
+  const { results, total } = generateResults(
+    data,
     {
       rating,
       age,
     },
     calcType
   );
-  const bidenVotes = results.total.biden;
-  const trumpVotes = results.total.trump;
+  const bidenVotes = total.biden;
+  const trumpVotes = total.trump;
 
   return (
     <div>
@@ -281,14 +277,6 @@ const USMap = (props) => {
           <option value="90">90 Days</option>
           <option value="120">120 Days</option>
           <option value="all">All Available Data</option>
-        </select>
-        <br />
-        Minimum Poll Rating:{" "}
-        <select onChange={(e) => setRating(e.target.value)} value={rating}>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
         </select>
         <br />
         Calculation Type:{" "}
@@ -331,6 +319,7 @@ const USMap = (props) => {
                           </Marker>
                         ) : (
                           <Annotation
+                            connectorProps={{}}
                             subject={centroid}
                             dx={offsets[cur.id][0]}
                             dy={offsets[cur.id][1]}
