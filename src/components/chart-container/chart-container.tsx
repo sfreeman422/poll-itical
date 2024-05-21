@@ -1,8 +1,9 @@
-import React from "react";
 import LineGraph from "../graphs/LineGraph";
 import USMap from "../maps/USMap";
+import { MapObject } from "../../models/map-object";
+import { PollResponse } from "../../models/poll-response";
 
-const generateDataPoints = (data) => {
+const generateDataPoints = (data: PollResponse[]) => {
   const dataPoints = [];
   const choices = {};
   // Generates a map of our choices and the datapoints associated with them.
@@ -34,7 +35,7 @@ const generateDataPoints = (data) => {
   return dataPoints;
 };
 
-const generateOptions = (title, data) => {
+const generateOptions = (title: string, data: PollResponse[]) => {
   const options = {
     animationEnabled: true,
     theme: "light1",
@@ -50,8 +51,10 @@ const generateOptions = (title, data) => {
     },
     toolTip: {
       shared: true,
-      contentFormatter: (e) => {
-        const sorted = e.entries.sort((a, b) => b.dataPoint.y - a.dataPoint.y);
+      contentFormatter: (e: any) => {
+        const sorted = e.entries.sort(
+          (a: any, b: any) => b.dataPoint.y - a.dataPoint.y
+        );
         let string = "";
         for (let i = 0; i < sorted.length; i++) {
           if (i === 0) {
@@ -83,17 +86,23 @@ const generateGenByState = (data) => {
   return mapObj;
 };
 
-const ChartContainer = ({ data }) => {
+export interface ChartContainerProps {
+  data: MapObject;
+}
+
+const ChartContainer = ({ data }: ChartContainerProps) => {
   return (
     <div className="chartContainer">
       <div className="map">
         <USMap data={generateGenByState(data["president-general"])} />
       </div>
       <div className="graphs">
-        {Object.keys(data).map((key, i) => {
-          const options = generateOptions(key, data[key]);
-          return <LineGraph key={`linegraph-key-${i}`} options={options} />;
-        })}
+        {Object.keys(data).map((key, i) => (
+          <LineGraph
+            key={`linegraph-key-${i}`}
+            options={generateOptions(key, data[key])}
+          />
+        ))}
       </div>
     </div>
   );
