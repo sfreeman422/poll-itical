@@ -222,18 +222,15 @@ interface USMapProps {
 }
 
 interface ResultFilter {
-  rating: string;
   age: string;
 }
 
 const USMap = ({ data }: USMapProps) => {
   const [age, setAge] = useState("90");
-  const [rating, setRating] = useState("C");
   const [calcType, setCalcType] = useState("latest");
   const { results, total } = generateResults(
     data,
     {
-      rating,
       age,
     },
     calcType
