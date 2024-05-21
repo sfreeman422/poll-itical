@@ -15,7 +15,7 @@ export const LineGraph = ({ options }: any) => {
   };
 
   return (
-    <div className="lineChart">
+    <div className="line-chart">
       {options?.data?.length ? (
         <CanvasJSChart
           options={{

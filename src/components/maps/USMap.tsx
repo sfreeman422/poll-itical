@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { geoCentroid } from "d3-geo";
 import {
   ComposableMap,
@@ -7,7 +6,6 @@ import {
   Marker,
   Annotation,
 } from "react-simple-maps";
-import { DateTime } from "luxon";
 
 import { electoralVotes } from "./data/electoralvotes";
 import allStates from "./data/allstates.json";
