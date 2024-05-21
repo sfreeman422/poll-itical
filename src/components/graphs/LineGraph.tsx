@@ -1,5 +1,5 @@
-import React from "react";
 import CanvasJSReact from "../../assets/canvasjs.react";
+import "./LineGraph.css";
 
 const { CanvasJSChart } = CanvasJSReact;
 
@@ -16,13 +16,20 @@ export const LineGraph = ({ options }: any) => {
 
   return (
     <div className="lineChart">
-      <CanvasJSChart
-        options={{
-          ...options,
-          legend: { itemClick: toggleDataSeries },
-        }}
-        onRef={(ref: any) => (chart = ref)}
-      />
+      {options?.data?.length ? (
+        <CanvasJSChart
+          options={{
+            ...options,
+            legend: { itemClick: toggleDataSeries },
+          }}
+          onRef={(ref: any) => (chart = ref)}
+        />
+      ) : (
+        <div className="no-data">
+          <h1>{options.title.text}</h1>
+          <div>No data available to display</div>
+        </div>
+      )}
     </div>
   );
 };

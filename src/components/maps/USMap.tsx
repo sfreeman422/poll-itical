@@ -17,7 +17,8 @@ import {
   GeneratedResults,
   GeneratedResultsTotal,
 } from "./USMap.models";
-import { PollResponse } from "../../models/poll-response";
+import { ResultFilter } from "../../app";
+import { getLatestGoodPoll } from "../../helpers/getLatestGoodPoll";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 const defaultColor = "#DDD";
@@ -83,64 +84,6 @@ const getColorShade = (winner: number, loser: number, candidate: any) => {
   } else {
     return defaultColor;
   }
-};
-
-const getAverage = (arr: PollResponse[]) => {
-  let totalJoe = 0;
-  let quantityJoe = 0;
-  let totalTrump = 0;
-  let quantityTrump = 0;
-  for (const poll of arr) {
-    for (const answer of poll.answers) {
-      if (answer.choice.toLowerCase() === "biden") {
-        totalJoe += +answer.pct;
-        quantityJoe += 1;
-      } else if (answer.choice.toLowerCase() === "trump") {
-        totalTrump += +answer.pct;
-        quantityTrump += 1;
-      }
-    }
-  }
-  return {
-    answers: [
-      {
-        choice: "biden",
-        pct: totalJoe / quantityJoe,
-      },
-      {
-        choice: "trump",
-        pct: totalTrump / quantityTrump,
-      },
-    ],
-  };
-};
-
-const getLatestGoodPoll = (
-  arr: PollResponse[],
-  age: string,
-  calcType: string
-): any | undefined => {
-  const ageAsNum = +age;
-  const goodPolls = arr.filter((poll) => {
-    if (age === "all") {
-      return true;
-    } else if (poll.endDate) {
-      const diffDays =
-        DateTime.fromISO(poll.endDate).diffNow("days").toObject()?.days ||
-        -ageAsNum;
-
-      return diffDays > -ageAsNum;
-    }
-    return false;
-  });
-
-  if (goodPolls.length > 0) {
-    if (calcType === "average") {
-      return getAverage(goodPolls);
-    }
-    return goodPolls.sort((a, b) => a.endDate.localeCompare(b.endDate))[0];
-  }
-  return undefined;
 };
 
 const generateResults = (
@@ -219,22 +162,12 @@ const generateResults = (
 
 interface USMapProps {
   data: PollResponsesByState;
+  filter: ResultFilter;
+  calcType: string;
 }
 
-interface ResultFilter {
-  age: string;
-}
-
-const USMap = ({ data }: USMapProps) => {
-  const [age, setAge] = useState("90");
-  const [calcType, setCalcType] = useState("latest");
-  const { results, total } = generateResults(
-    data,
-    {
-      age,
-    },
-    calcType
-  );
+const USMap = ({ data, filter, calcType }: USMapProps) => {
+  const { results, total } = generateResults(data, filter, calcType);
   const bidenVotes = total.biden;
   const trumpVotes = total.trump;
 
@@ -265,22 +198,6 @@ const USMap = ({ data }: USMapProps) => {
           <div className="colorBox red00"></div> 1%-5% lead{" "}
           <div className="colorBox blue00"></div>
         </div>
-      </div>
-      <div>
-        Time Period:{" "}
-        <select onChange={(e) => setAge(e.target.value)} value={age}>
-          <option value="30">30 Days</option>
-          <option value="60">60 Days</option>
-          <option value="90">90 Days</option>
-          <option value="120">120 Days</option>
-          <option value="all">All Available Data</option>
-        </select>
-        <br />
-        Calculation Type:{" "}
-        <select onChange={(e) => setCalcType(e.target.value)} value={calcType}>
-          <option value="average">Average</option>
-          <option value="latest">Latest</option>
-        </select>
       </div>
       <div className="map-container">
         <ComposableMap projection="geoAlbersUsa">
