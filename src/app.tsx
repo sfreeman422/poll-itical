@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ChartContainer from "./components/chart-container/chart-container";
 import filterAndSort from "./helpers/filterAndSort";
 import "./app.css";
 import { PollResponse } from "./models/poll-response";
 import { MapObject } from "./models/map-object";
+import { Loader } from "./components/loader/loader";
 export interface ResultFilter {
   age: string;
 }
 
 export const App = () => {
-  const [data, setData] = React.useState<MapObject>({});
+  const [data, setData] = useState<MapObject>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("https://projects.fivethirtyeight.com/polls/polls.json")
       .then((data) => data.json())
       .then((json: PollResponse[]) => setData(filterAndSort(json)))
+      .then(() => setLoading(false))
       .catch((e) => console.error(e));
   }, []);
 
@@ -49,7 +52,11 @@ export const App = () => {
         </div>
       </header>
       <div className="content">
-        <ChartContainer data={data} filter={filter} calcType={calcType} />
+        {loading ? (
+          <Loader />
+        ) : (
+          <ChartContainer data={data} filter={filter} calcType={calcType} />
+        )}
       </div>
     </div>
   );
