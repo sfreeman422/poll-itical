@@ -24,7 +24,9 @@ export const getLatestGoodPoll = (
     if (calcType === "average") {
       return getAverage(goodPolls);
     }
-    return goodPolls.sort((a, b) => a.endDate.localeCompare(b.endDate))[0];
+    const sorted = goodPolls.sort((a, b) => b.endDate.localeCompare(a.endDate));
+
+    return sorted[0];
   }
   return undefined;
 };
