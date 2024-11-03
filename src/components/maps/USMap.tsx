@@ -65,7 +65,7 @@ const getColorShade = (winner: number, loser: number, candidate: any) => {
     } else if (difference === 0) {
       return defaultColor;
     }
-  } else if (candidate === "biden") {
+  } else if (candidate === "harris") {
     if (difference >= 20) {
       return blueColor[20];
     } else if (difference >= 15 && difference < 20) {
@@ -91,7 +91,7 @@ const generateResults = (
 ): AllGeneratedResults => {
   const results: GeneratedResults = {};
   const totalResults: GeneratedResultsTotal = {
-    biden: 0,
+    harris: 0,
     trump: 0,
     total: 0,
   };
@@ -107,7 +107,7 @@ const generateResults = (
         for (let i = 0; i < latestResult.length; i++) {
           if (
             latestResult[i].choice.toLowerCase() === "trump" ||
-            latestResult[i].choice.toLowerCase() === "biden"
+            latestResult[i].choice.toLowerCase() === "harris"
           ) {
             const pct = +latestResult[i].pct;
             if (pct > winnerScore) {
@@ -134,14 +134,14 @@ const generateResults = (
     }
 
     const votes = {
-      biden: 0,
+      harris: 0,
       trump: 0,
       total: 0,
     };
 
     Object.keys(results).forEach((key) => {
-      if (results[key].winner === "biden") {
-        votes.biden += results[key].votes;
+      if (results[key].winner === "harris") {
+        votes.harris += results[key].votes;
       } else if (results[key].winner === "trump") {
         votes.trump += results[key].votes;
       }
@@ -150,7 +150,7 @@ const generateResults = (
       }
     });
 
-    totalResults.biden = votes.biden;
+    totalResults.harris = votes.harris;
     totalResults.trump = votes.trump;
     totalResults.total = votes.total;
   });
@@ -166,7 +166,7 @@ interface USMapProps {
 
 const USMap = ({ data, filter, calcType }: USMapProps) => {
   const { results, total } = generateResults(data, filter, calcType);
-  const bidenVotes = total.biden;
+  const harrisVotes = total.harris;
   const trumpVotes = total.trump;
 
   return (
@@ -174,7 +174,7 @@ const USMap = ({ data, filter, calcType }: USMapProps) => {
       <h1>Latest Poll Results - General Election</h1>
       <h2>Electoral Votes</h2>
       <h3>Trump: {trumpVotes}</h3>
-      <h3>Biden: {bidenVotes}</h3>
+      <h3>Harris: {harrisVotes}</h3>
       <div>
         <div>
           <div className="colorBox red20"></div> 20% or more lead{" "}

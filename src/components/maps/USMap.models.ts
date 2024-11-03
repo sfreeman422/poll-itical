@@ -22,7 +22,7 @@ export interface GeneratedResultsData {
 }
 
 export interface GeneratedResultsTotal {
-  biden: number;
+  harris: number;
   trump: number;
   total: number;
 }

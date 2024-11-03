@@ -38,7 +38,7 @@ export const getAverage = (arr: PollResponse[]) => {
   let quantityTrump = 0;
   for (const poll of arr) {
     for (const answer of poll.answers) {
-      if (answer.choice.toLowerCase() === "biden") {
+      if (answer.choice.toLowerCase() === "harris") {
         totalJoe += +answer.pct;
         quantityJoe += 1;
       } else if (answer.choice.toLowerCase() === "trump") {
@@ -50,7 +50,7 @@ export const getAverage = (arr: PollResponse[]) => {
   return {
     answers: [
       {
-        choice: "biden",
+        choice: "harris",
         pct: totalJoe / quantityJoe,
       },
       {
